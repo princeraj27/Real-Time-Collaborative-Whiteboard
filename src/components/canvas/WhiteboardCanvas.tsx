@@ -357,12 +357,12 @@ export default function WhiteboardCanvas({
                 return;
             }
 
-            // TEXT — show inline input
+            // TEXT — show inline input at screen position relative to container
             if (tool === "text") {
                 setTextInput({
                     visible: true,
-                    x: e.clientX,
-                    y: e.clientY,
+                    x: screenX,
+                    y: screenY,
                     canvasX: point.x,
                     canvasY: point.y,
                     value: "",
@@ -530,13 +530,15 @@ export default function WhiteboardCanvas({
                             setTextInput((prev) => ({ ...prev, visible: false }));
                     }}
                     onBlur={submitText}
-                    className="absolute z-50 bg-transparent text-white outline-none border-none caret-blue-400 min-w-[2px]"
+                    className="absolute z-50 bg-transparent outline-none border-none caret-blue-400"
                     style={{
                         left: textInput.x,
-                        top: textInput.y - 10,
+                        top: textInput.y - 12,
                         fontSize: `${useCanvasStore.getState().strokeWidth * 5 * scale}px`,
                         fontFamily: "Inter, sans-serif",
                         color: useCanvasStore.getState().strokeColor,
+                        minWidth: "20px",
+                        width: `${Math.max(20, textInput.value.length * useCanvasStore.getState().strokeWidth * 3 * scale)}px`,
                     }}
                     autoFocus
                 />

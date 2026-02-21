@@ -86,14 +86,39 @@ export default function BoardPage() {
         setShowClearDialog(false);
     }, [emitClearCanvas]);
 
-    const handleExport = useCallback(() => {
-        const canvas = document.querySelector("canvas");
-        if (!canvas) return;
-
+    const handleExportPng = useCallback(async () => {
+        const area = document.getElementById("canvas-area");
+        if (!area) return;
+        const html2canvas = (await import("html2canvas")).default;
+        const canvas = await html2canvas(area, {
+            backgroundColor: "#1a1a2e",
+            scale: 2,
+            useCORS: true,
+        });
         const link = document.createElement("a");
         link.download = `whiteboard-${roomId}.png`;
         link.href = canvas.toDataURL("image/png");
         link.click();
+    }, [roomId]);
+
+    const handleExportPdf = useCallback(async () => {
+        const area = document.getElementById("canvas-area");
+        if (!area) return;
+        const html2canvas = (await import("html2canvas")).default;
+        const { default: jsPDF } = await import("jspdf");
+        const canvas = await html2canvas(area, {
+            backgroundColor: "#1a1a2e",
+            scale: 2,
+            useCORS: true,
+        });
+        const imgData = canvas.toDataURL("image/png");
+        const pdf = new jsPDF({
+            orientation: canvas.width > canvas.height ? "landscape" : "portrait",
+            unit: "px",
+            format: [canvas.width, canvas.height],
+        });
+        pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
+        pdf.save(`whiteboard-${roomId}.pdf`);
     }, [roomId]);
 
     // Handle Delete key for selected element
@@ -102,7 +127,6 @@ export default function BoardPage() {
             if (e.key === "Delete" || e.key === "Backspace") {
                 const state = useCanvasStore.getState();
                 if (state.selectedElementId && state.currentTool === "select") {
-                    // Don't delete if user is typing in an input
                     const active = document.activeElement;
                     if (
                         active &&
@@ -129,11 +153,11 @@ export default function BoardPage() {
         <div className="h-screen w-screen flex flex-col bg-[#0a0a1a] overflow-hidden">
             {/* Toolbar */}
             <div className="relative">
-                <Toolbar onClear={handleClear} onExport={handleExport} />
+                <Toolbar onClear={handleClear} onExportPng={handleExportPng} onExportPdf={handleExportPdf} />
             </div>
 
             {/* Canvas area */}
-            <div className="flex-1 relative">
+            <div className="flex-1 relative" id="canvas-area">
                 <WhiteboardCanvas
                     emitAddElement={emitAddElement}
                     emitUpdateElement={emitUpdateElement}

@@ -26,13 +26,15 @@ import {
     Undo2,
     Redo2,
     Trash2,
+    FileText,
     Download,
     Palette,
 } from "lucide-react";
 
 interface ToolbarProps {
     onClear: () => void;
-    onExport: () => void;
+    onExportPng: () => void;
+    onExportPdf: () => void;
 }
 
 const TOOLS: { tool: Tool; icon: React.ElementType; label: string }[] = [
@@ -59,7 +61,7 @@ const COLORS = [
     "#6b7280",
 ];
 
-export default function Toolbar({ onClear, onExport }: ToolbarProps) {
+export default function Toolbar({ onClear, onExportPng, onExportPdf }: ToolbarProps) {
     const {
         currentTool,
         strokeColor,
@@ -80,8 +82,8 @@ export default function Toolbar({ onClear, onExport }: ToolbarProps) {
                             <button
                                 id={`tool-${tool}`}
                                 className={`inline-flex items-center justify-center h-9 w-9 rounded-xl transition-all duration-150 cursor-pointer ${currentTool === tool
-                                        ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30"
-                                        : "text-gray-400 hover:text-white hover:bg-white/10"
+                                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30"
+                                    : "text-gray-400 hover:text-white hover:bg-white/10"
                                     }`}
                                 onClick={() => setTool(tool)}
                             >
@@ -122,8 +124,8 @@ export default function Toolbar({ onClear, onExport }: ToolbarProps) {
                             <button
                                 key={color}
                                 className={`w-7 h-7 rounded-lg border-2 transition-all hover:scale-110 cursor-pointer ${strokeColor === color
-                                        ? "border-white scale-110 shadow-lg"
-                                        : "border-transparent"
+                                    ? "border-white scale-110 shadow-lg"
+                                    : "border-transparent"
                                     }`}
                                 style={{ backgroundColor: color }}
                                 onClick={() => setStrokeColor(color)}
@@ -242,15 +244,30 @@ export default function Toolbar({ onClear, onExport }: ToolbarProps) {
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <button
-                            id="export-btn"
+                            id="export-png-btn"
                             className="inline-flex items-center justify-center h-9 w-9 rounded-xl text-green-400 hover:text-green-300 hover:bg-green-500/10 transition-all duration-150 cursor-pointer"
-                            onClick={onExport}
+                            onClick={onExportPng}
                         >
                             <Download className="h-4 w-4" />
                         </button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom" className="text-xs">
-                        Export as PNG
+                        Export PNG
+                    </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <button
+                            id="export-pdf-btn"
+                            className="inline-flex items-center justify-center h-9 w-9 rounded-xl text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 transition-all duration-150 cursor-pointer"
+                            onClick={onExportPdf}
+                        >
+                            <FileText className="h-4 w-4" />
+                        </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="text-xs">
+                        Export PDF
                     </TooltipContent>
                 </Tooltip>
             </div>
