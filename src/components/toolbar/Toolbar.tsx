@@ -3,7 +3,6 @@
 import React from "react";
 import { useCanvasStore, Tool } from "@/stores/canvasStore";
 import { useHistory } from "@/hooks/useHistory";
-import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import {
     Tooltip,
@@ -78,18 +77,16 @@ export default function Toolbar({ onClear, onExport }: ToolbarProps) {
                 {TOOLS.map(({ tool, icon: Icon, label }) => (
                     <Tooltip key={tool}>
                         <TooltipTrigger asChild>
-                            <Button
+                            <button
                                 id={`tool-${tool}`}
-                                variant={currentTool === tool ? "default" : "ghost"}
-                                size="icon"
-                                className={`h-9 w-9 rounded-xl transition-all ${currentTool === tool
+                                className={`inline-flex items-center justify-center h-9 w-9 rounded-xl transition-all duration-150 cursor-pointer ${currentTool === tool
                                         ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30"
                                         : "text-gray-400 hover:text-white hover:bg-white/10"
                                     }`}
                                 onClick={() => setTool(tool)}
                             >
                                 <Icon className="h-4 w-4" />
-                            </Button>
+                            </button>
                         </TooltipTrigger>
                         <TooltipContent side="bottom" className="text-xs">
                             {label}
@@ -103,11 +100,9 @@ export default function Toolbar({ onClear, onExport }: ToolbarProps) {
             {/* Color Picker */}
             <Popover>
                 <PopoverTrigger asChild>
-                    <Button
+                    <button
                         id="color-picker-trigger"
-                        variant="ghost"
-                        size="icon"
-                        className="h-9 w-9 rounded-xl text-gray-400 hover:text-white hover:bg-white/10"
+                        className="inline-flex items-center justify-center h-9 w-9 rounded-xl text-gray-400 hover:text-white hover:bg-white/10 transition-all duration-150 cursor-pointer"
                     >
                         <div className="relative">
                             <Palette className="h-4 w-4" />
@@ -116,7 +111,7 @@ export default function Toolbar({ onClear, onExport }: ToolbarProps) {
                                 style={{ backgroundColor: strokeColor }}
                             />
                         </div>
-                    </Button>
+                    </button>
                 </PopoverTrigger>
                 <PopoverContent
                     className="w-auto p-3 bg-[#16213e]/95 backdrop-blur-xl border-white/10"
@@ -126,7 +121,7 @@ export default function Toolbar({ onClear, onExport }: ToolbarProps) {
                         {COLORS.map((color) => (
                             <button
                                 key={color}
-                                className={`w-7 h-7 rounded-lg border-2 transition-all hover:scale-110 ${strokeColor === color
+                                className={`w-7 h-7 rounded-lg border-2 transition-all hover:scale-110 cursor-pointer ${strokeColor === color
                                         ? "border-white scale-110 shadow-lg"
                                         : "border-transparent"
                                     }`}
@@ -152,11 +147,9 @@ export default function Toolbar({ onClear, onExport }: ToolbarProps) {
             {/* Stroke Width */}
             <Popover>
                 <PopoverTrigger asChild>
-                    <Button
+                    <button
                         id="stroke-width-trigger"
-                        variant="ghost"
-                        size="icon"
-                        className="h-9 w-9 rounded-xl text-gray-400 hover:text-white hover:bg-white/10"
+                        className="inline-flex items-center justify-center h-9 w-9 rounded-xl text-gray-400 hover:text-white hover:bg-white/10 transition-all duration-150 cursor-pointer"
                     >
                         <div className="flex items-center justify-center">
                             <div
@@ -167,7 +160,7 @@ export default function Toolbar({ onClear, onExport }: ToolbarProps) {
                                 }}
                             />
                         </div>
-                    </Button>
+                    </button>
                 </PopoverTrigger>
                 <PopoverContent
                     className="w-48 p-3 bg-[#16213e]/95 backdrop-blur-xl border-white/10"
@@ -196,16 +189,14 @@ export default function Toolbar({ onClear, onExport }: ToolbarProps) {
             <div className="flex items-center gap-0.5">
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button
+                        <button
                             id="undo-btn"
-                            variant="ghost"
-                            size="icon"
-                            className="h-9 w-9 rounded-xl text-gray-400 hover:text-white hover:bg-white/10 disabled:opacity-30"
+                            className="inline-flex items-center justify-center h-9 w-9 rounded-xl text-gray-400 hover:text-white hover:bg-white/10 transition-all duration-150 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                             disabled={!canUndo}
                             onClick={undo}
                         >
                             <Undo2 className="h-4 w-4" />
-                        </Button>
+                        </button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom" className="text-xs">
                         Undo (Ctrl+Z)
@@ -214,16 +205,14 @@ export default function Toolbar({ onClear, onExport }: ToolbarProps) {
 
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button
+                        <button
                             id="redo-btn"
-                            variant="ghost"
-                            size="icon"
-                            className="h-9 w-9 rounded-xl text-gray-400 hover:text-white hover:bg-white/10 disabled:opacity-30"
+                            className="inline-flex items-center justify-center h-9 w-9 rounded-xl text-gray-400 hover:text-white hover:bg-white/10 transition-all duration-150 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                             disabled={!canRedo}
                             onClick={redo}
                         >
                             <Redo2 className="h-4 w-4" />
-                        </Button>
+                        </button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom" className="text-xs">
                         Redo (Ctrl+Shift+Z)
@@ -237,15 +226,13 @@ export default function Toolbar({ onClear, onExport }: ToolbarProps) {
             <div className="flex items-center gap-0.5">
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button
+                        <button
                             id="clear-btn"
-                            variant="ghost"
-                            size="icon"
-                            className="h-9 w-9 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                            className="inline-flex items-center justify-center h-9 w-9 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all duration-150 cursor-pointer"
                             onClick={onClear}
                         >
                             <Trash2 className="h-4 w-4" />
-                        </Button>
+                        </button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom" className="text-xs">
                         Clear Canvas
@@ -254,15 +241,13 @@ export default function Toolbar({ onClear, onExport }: ToolbarProps) {
 
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button
+                        <button
                             id="export-btn"
-                            variant="ghost"
-                            size="icon"
-                            className="h-9 w-9 rounded-xl text-green-400 hover:text-green-300 hover:bg-green-500/10"
+                            className="inline-flex items-center justify-center h-9 w-9 rounded-xl text-green-400 hover:text-green-300 hover:bg-green-500/10 transition-all duration-150 cursor-pointer"
                             onClick={onExport}
                         >
                             <Download className="h-4 w-4" />
-                        </Button>
+                        </button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom" className="text-xs">
                         Export as PNG

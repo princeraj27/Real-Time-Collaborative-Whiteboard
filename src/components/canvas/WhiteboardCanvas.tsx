@@ -36,14 +36,8 @@ export default function WhiteboardCanvas({
     const startPoint = useRef<Point>({ x: 0, y: 0 });
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
-    const {
-        currentTool,
-        strokeColor,
-        strokeWidth,
-        elements,
-        addElement,
-        pushToHistory,
-    } = useCanvasStore();
+    const elements = useCanvasStore((s) => s.elements);
+    const currentTool = useCanvasStore((s) => s.currentTool);
 
     // Handle resize
     useEffect(() => {
@@ -58,8 +52,8 @@ export default function WhiteboardCanvas({
         return () => window.removeEventListener("resize", updateDimensions);
     }, []);
 
-    // Redraw canvas
-    const redraw = useCallback(() => {
+    // Redraw canvas whenever elements change
+    useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
         const ctx = canvas.getContext("2d");
@@ -148,7 +142,11 @@ export default function WhiteboardCanvas({
                     ctx.stroke();
                 }
             } else if (element.type === "text") {
-                if (element.text && element.x !== undefined && element.y !== undefined) {
+                if (
+                    element.text &&
+                    element.x !== undefined &&
+                    element.y !== undefined
+                ) {
                     ctx.font = `${element.strokeWidth * 5}px Inter, sans-serif`;
                     ctx.fillStyle = element.color;
                     ctx.fillText(element.text, element.x, element.y);
@@ -157,110 +155,127 @@ export default function WhiteboardCanvas({
 
             ctx.restore();
         });
-    }, [elements]);
+    }, [elements, dimensions]);
 
-    useEffect(() => {
-        redraw();
-    }, [redraw]);
-
-    const getCanvasPoint = (e: React.MouseEvent | React.TouchEvent): Point => {
+    const getCanvasPoint = (e: React.MouseEvent): Point => {
         const canvas = canvasRef.current;
         if (!canvas) return { x: 0, y: 0 };
         const rect = canvas.getBoundingClientRect();
-        const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
-        const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
         return {
-            x: clientX - rect.left,
-            y: clientY - rect.top,
+            x: e.clientX - rect.left,
+            y: e.clientY - rect.top,
         };
     };
 
-    const handlePointerDown = (e: React.MouseEvent) => {
-        if (currentTool === "select" || currentTool === "sticky") return;
+    const handlePointerDown = useCallback(
+        (e: React.MouseEvent) => {
+            // Always read fresh state
+            const state = useCanvasStore.getState();
+            const tool = state.currentTool;
+            const color = state.strokeColor;
+            const width = state.strokeWidth;
 
-        const point = getCanvasPoint(e);
-        isDrawing.current = true;
-        currentElementId.current = uuidv4();
-        startPoint.current = point;
+            if (tool === "select" || tool === "sticky") return;
 
-        if (currentTool === "text") {
-            const text = prompt("Enter text:");
-            if (text) {
-                const element: CanvasElement = {
-                    id: currentElementId.current,
-                    type: "text",
-                    points: [],
-                    color: strokeColor,
-                    strokeWidth,
-                    text,
-                    x: point.x,
-                    y: point.y,
-                };
-                pushToHistory();
-                addElement(element);
-                emitAddElement(element);
-            }
-            isDrawing.current = false;
-            return;
-        }
-
-        currentPoints.current = [point];
-
-        const element: CanvasElement = {
-            id: currentElementId.current,
-            type: currentTool,
-            points: [point],
-            color: strokeColor,
-            strokeWidth,
-        };
-        pushToHistory();
-        addElement(element);
-    };
-
-    const handlePointerMove = (e: React.MouseEvent) => {
-        const point = getCanvasPoint(e);
-
-        // Emit cursor position for collaboration
-        emitCursorMove(point.x, point.y);
-
-        if (!isDrawing.current) return;
-
-        const { elements } = useCanvasStore.getState();
-        const currentElement = elements.find(
-            (el) => el.id === currentElementId.current
-        );
-        if (!currentElement) return;
-
-        if (currentTool === "pen" || currentTool === "eraser") {
-            currentPoints.current.push(point);
-            const updatedElement = {
-                ...currentElement,
-                points: [...currentPoints.current],
+            const canvas = canvasRef.current;
+            if (!canvas) return;
+            const rect = canvas.getBoundingClientRect();
+            const point: Point = {
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top,
             };
-            useCanvasStore.getState().updateElement(currentElementId.current, {
-                points: updatedElement.points,
-            });
-        } else {
-            // For shapes, store start and current point
-            useCanvasStore.getState().updateElement(currentElementId.current, {
-                points: [startPoint.current, point],
-            });
-        }
-    };
 
-    const handlePointerUp = () => {
+            isDrawing.current = true;
+            currentElementId.current = uuidv4();
+            startPoint.current = point;
+
+            if (tool === "text") {
+                const text = prompt("Enter text:");
+                if (text) {
+                    const element: CanvasElement = {
+                        id: currentElementId.current,
+                        type: "text",
+                        points: [],
+                        color,
+                        strokeWidth: width,
+                        text,
+                        x: point.x,
+                        y: point.y,
+                    };
+                    state.pushToHistory();
+                    state.addElement(element);
+                    emitAddElement(element);
+                }
+                isDrawing.current = false;
+                return;
+            }
+
+            currentPoints.current = [point];
+
+            const element: CanvasElement = {
+                id: currentElementId.current,
+                type: tool,
+                points: [point],
+                color,
+                strokeWidth: width,
+            };
+            state.pushToHistory();
+            state.addElement(element);
+        },
+        [emitAddElement]
+    );
+
+    const handlePointerMove = useCallback(
+        (e: React.MouseEvent) => {
+            const canvas = canvasRef.current;
+            if (!canvas) return;
+            const rect = canvas.getBoundingClientRect();
+            const point: Point = {
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top,
+            };
+
+            // Emit cursor position for collaboration
+            emitCursorMove(point.x, point.y);
+
+            if (!isDrawing.current) return;
+
+            // Always read fresh state
+            const state = useCanvasStore.getState();
+            const tool = state.currentTool;
+            const currentElement = state.elements.find(
+                (el) => el.id === currentElementId.current
+            );
+            if (!currentElement) return;
+
+            if (tool === "pen" || tool === "eraser") {
+                currentPoints.current.push(point);
+                state.updateElement(currentElementId.current, {
+                    points: [...currentPoints.current],
+                });
+            } else {
+                // For shapes, store start and current point
+                state.updateElement(currentElementId.current, {
+                    points: [startPoint.current, point],
+                });
+            }
+        },
+        [emitCursorMove]
+    );
+
+    const handlePointerUp = useCallback(() => {
         if (!isDrawing.current) return;
         isDrawing.current = false;
 
-        const { elements } = useCanvasStore.getState();
-        const element = elements.find(
+        const state = useCanvasStore.getState();
+        const element = state.elements.find(
             (el) => el.id === currentElementId.current
         );
         if (element) {
             emitAddElement(element);
         }
         currentPoints.current = [];
-    };
+    }, [emitAddElement]);
 
     const getCursorStyle = (): string => {
         switch (currentTool) {
@@ -280,13 +295,13 @@ export default function WhiteboardCanvas({
     return (
         <div
             ref={containerRef}
-            className="flex-1 relative overflow-hidden bg-[#1a1a2e]"
+            className="absolute inset-0 overflow-hidden bg-[#1a1a2e]"
         >
             <canvas
                 ref={canvasRef}
                 width={dimensions.width}
                 height={dimensions.height}
-                className="absolute inset-0"
+                className="absolute inset-0 touch-none"
                 style={{ cursor: getCursorStyle() }}
                 onMouseDown={handlePointerDown}
                 onMouseMove={handlePointerMove}
