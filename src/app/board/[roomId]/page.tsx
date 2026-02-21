@@ -17,6 +17,37 @@ import {
     DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Plus, Minus, RotateCcw } from "lucide-react";
+
+function ZoomControls() {
+    const scale = useCanvasStore((s) => s.scale);
+    const { zoomIn, zoomOut, resetZoom } = useCanvasStore();
+
+    return (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30">
+            <div className="bg-[#16213e]/80 backdrop-blur-xl border border-white/10 rounded-xl px-1.5 py-1 flex items-center gap-0.5">
+                <button
+                    onClick={zoomOut}
+                    className="h-7 w-7 inline-flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                >
+                    <Minus className="h-3.5 w-3.5" />
+                </button>
+                <button
+                    onClick={resetZoom}
+                    className="h-7 min-w-[52px] inline-flex items-center justify-center rounded-lg text-[11px] font-mono text-gray-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                >
+                    {Math.round(scale * 100)}%
+                </button>
+                <button
+                    onClick={zoomIn}
+                    className="h-7 w-7 inline-flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                >
+                    <Plus className="h-3.5 w-3.5" />
+                </button>
+            </div>
+        </div>
+    );
+}
 
 export default function BoardPage() {
     const params = useParams();
@@ -125,6 +156,9 @@ export default function BoardPage() {
                     </span>
                 </div>
             </div>
+
+            {/* Zoom controls bottom-center */}
+            <ZoomControls />
 
             {/* Clear confirmation dialog */}
             <Dialog open={showClearDialog} onOpenChange={setShowClearDialog}>

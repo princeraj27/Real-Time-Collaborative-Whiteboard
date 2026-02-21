@@ -14,20 +14,29 @@ export default function StickyNoteOverlay({
     emitRemoveElement,
 }: StickyNoteOverlayProps) {
     const elements = useCanvasStore((s) => s.elements);
+    const panOffset = useCanvasStore((s) => s.panOffset);
+    const scale = useCanvasStore((s) => s.scale);
     const stickyNotes = elements.filter((el) => el.type === "sticky");
 
     if (stickyNotes.length === 0) return null;
 
     return (
-        <div className="absolute inset-0 pointer-events-none z-10">
-            {stickyNotes.map((note) => (
-                <StickyNote
-                    key={note.id}
-                    note={note}
-                    emitUpdateElement={emitUpdateElement}
-                    emitRemoveElement={emitRemoveElement}
-                />
-            ))}
+        <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden">
+            <div
+                style={{
+                    transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${scale})`,
+                    transformOrigin: "0 0",
+                }}
+            >
+                {stickyNotes.map((note) => (
+                    <StickyNote
+                        key={note.id}
+                        note={note}
+                        emitUpdateElement={emitUpdateElement}
+                        emitRemoveElement={emitRemoveElement}
+                    />
+                ))}
+            </div>
         </div>
     );
 }
@@ -54,13 +63,15 @@ function StickyNote({
             e.stopPropagation();
             e.preventDefault();
             isDragging.current = true;
+
+            const scale = useCanvasStore.getState().scale;
             dragStart.current = { x: e.clientX, y: e.clientY };
             noteStart.current = { x: note.x ?? 0, y: note.y ?? 0 };
 
             const handleMouseMove = (ev: MouseEvent) => {
                 if (!isDragging.current) return;
-                const dx = ev.clientX - dragStart.current.x;
-                const dy = ev.clientY - dragStart.current.y;
+                const dx = (ev.clientX - dragStart.current.x) / scale;
+                const dy = (ev.clientY - dragStart.current.y) / scale;
                 useCanvasStore.getState().updateElement(note.id, {
                     x: noteStart.current.x + dx,
                     y: noteStart.current.y + dy,
@@ -118,16 +129,12 @@ function StickyNote({
                 height: note.height ?? 150,
             }}
         >
-            {/* Card */}
             <div
                 className="relative w-full h-full rounded-lg shadow-xl cursor-grab active:cursor-grabbing select-none flex flex-col overflow-hidden"
-                style={{
-                    backgroundColor: note.stickyColor || "#fef08a",
-                }}
+                style={{ backgroundColor: note.stickyColor || "#fef08a" }}
                 onMouseDown={handleMouseDown}
                 onDoubleClick={handleDoubleClick}
             >
-                {/* Header drag handle */}
                 <div className="h-6 flex items-center justify-between px-2 opacity-60 shrink-0">
                     <div className="flex gap-0.5">
                         <div className="w-1.5 h-1.5 rounded-full bg-black/20" />
@@ -142,7 +149,6 @@ function StickyNote({
                     </button>
                 </div>
 
-                {/* Content */}
                 <div className="flex-1 px-3 pb-2 overflow-hidden">
                     {isEditing ? (
                         <textarea
@@ -150,17 +156,11 @@ function StickyNote({
                             value={editText}
                             onChange={(e) => setEditText(e.target.value)}
                             onBlur={handleBlur}
-                            onKeyDown={(e) => {
-                                if (e.key === "Escape") handleBlur();
-                            }}
+                            onKeyDown={(e) => { if (e.key === "Escape") handleBlur(); }}
                             className="w-full h-full bg-transparent text-sm text-black/80 resize-none outline-none border-none font-medium leading-relaxed"
-                            style={{ fontFamily: "'Caveat', cursive, sans-serif" }}
                         />
                     ) : (
-                        <p
-                            className="text-sm text-black/80 font-medium leading-relaxed whitespace-pre-wrap break-words"
-                            style={{ fontFamily: "'Caveat', cursive, sans-serif" }}
-                        >
+                        <p className="text-sm text-black/80 font-medium leading-relaxed whitespace-pre-wrap break-words">
                             {note.text || "Double-click to edit"}
                         </p>
                     )}

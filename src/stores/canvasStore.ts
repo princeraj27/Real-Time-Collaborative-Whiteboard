@@ -53,6 +53,15 @@ interface CanvasState {
   setStrokeColor: (color: string) => void;
   setStrokeWidth: (width: number) => void;
 
+  // Pan & Zoom
+  panOffset: Point;
+  scale: number;
+  setPanOffset: (offset: Point) => void;
+  setScale: (scale: number) => void;
+  zoomIn: () => void;
+  zoomOut: () => void;
+  resetZoom: () => void;
+
   // Elements
   elements: CanvasElement[];
   setElements: (elements: CanvasElement[]) => void;
@@ -101,6 +110,15 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   setTool: (tool) => set({ currentTool: tool }),
   setStrokeColor: (color) => set({ strokeColor: color }),
   setStrokeWidth: (width) => set({ strokeWidth: width }),
+
+  // Pan & Zoom
+  panOffset: { x: 0, y: 0 },
+  scale: 1,
+  setPanOffset: (offset) => set({ panOffset: offset }),
+  setScale: (scale) => set({ scale: Math.max(0.1, Math.min(5, scale)) }),
+  zoomIn: () => set((state) => ({ scale: Math.min(5, state.scale * 1.15) })),
+  zoomOut: () => set((state) => ({ scale: Math.max(0.1, state.scale / 1.15) })),
+  resetZoom: () => set({ scale: 1, panOffset: { x: 0, y: 0 } }),
 
   // Elements
   elements: [],
