@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useEffect, useRef, useCallback } from "react";
+import React, { useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useCanvasStore } from "@/stores/canvasStore";
 import { useSocket } from "@/hooks/useSocket";
 import WhiteboardCanvas from "@/components/canvas/WhiteboardCanvas";
 import CursorOverlay from "@/components/canvas/CursorOverlay";
+import StickyNoteOverlay from "@/components/canvas/StickyNote";
 import Toolbar from "@/components/toolbar/Toolbar";
 import Sidebar from "@/components/sidebar/Sidebar";
 import {
@@ -20,7 +21,6 @@ import { Button } from "@/components/ui/button";
 export default function BoardPage() {
     const params = useParams();
     const roomId = params.roomId as string;
-    const canvasContainerRef = useRef<HTMLDivElement>(null);
     const [showClearDialog, setShowClearDialog] = React.useState(false);
 
     const { setRoomId, setUserName, userName } = useCanvasStore();
@@ -39,6 +39,8 @@ export default function BoardPage() {
 
     const {
         emitAddElement,
+        emitUpdateElement,
+        emitRemoveElement,
         emitCursorMove,
         emitClearCanvas,
     } = useSocket();
@@ -63,12 +65,39 @@ export default function BoardPage() {
         link.click();
     }, [roomId]);
 
+    // Handle Delete key for selected element
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Delete" || e.key === "Backspace") {
+                const state = useCanvasStore.getState();
+                if (state.selectedElementId && state.currentTool === "select") {
+                    // Don't delete if user is typing in an input
+                    const active = document.activeElement;
+                    if (
+                        active &&
+                        (active.tagName === "INPUT" ||
+                            active.tagName === "TEXTAREA")
+                    )
+                        return;
+
+                    e.preventDefault();
+                    state.pushToHistory();
+                    const id = state.selectedElementId;
+                    state.removeElement(id);
+                    emitRemoveElement(id);
+                }
+            }
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [emitRemoveElement]);
+
     if (!userName) return null;
 
     return (
         <div className="h-screen w-screen flex flex-col bg-[#0a0a1a] overflow-hidden">
             {/* Toolbar */}
-            <div className="relative" ref={canvasContainerRef}>
+            <div className="relative">
                 <Toolbar onClear={handleClear} onExport={handleExport} />
             </div>
 
@@ -76,7 +105,12 @@ export default function BoardPage() {
             <div className="flex-1 relative">
                 <WhiteboardCanvas
                     emitAddElement={emitAddElement}
+                    emitUpdateElement={emitUpdateElement}
                     emitCursorMove={emitCursorMove}
+                />
+                <StickyNoteOverlay
+                    emitUpdateElement={emitUpdateElement}
+                    emitRemoveElement={emitRemoveElement}
                 />
                 <CursorOverlay />
                 <Sidebar />

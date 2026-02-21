@@ -61,6 +61,10 @@ interface CanvasState {
   removeElement: (id: string) => void;
   clearCanvas: () => void;
 
+  // Selection
+  selectedElementId: string | null;
+  setSelectedElementId: (id: string | null) => void;
+
   // History (undo/redo)
   history: CanvasElement[][];
   historyIndex: number;
@@ -112,11 +116,17 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   removeElement: (id) =>
     set((state) => ({
       elements: state.elements.filter((el) => el.id !== id),
+      selectedElementId:
+        state.selectedElementId === id ? null : state.selectedElementId,
     })),
   clearCanvas: () => {
     get().pushToHistory();
-    set({ elements: [] });
+    set({ elements: [], selectedElementId: null });
   },
+
+  // Selection
+  selectedElementId: null,
+  setSelectedElementId: (id) => set({ selectedElementId: id }),
 
   // History
   history: [[]],
@@ -124,7 +134,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   pushToHistory: () => {
     const { elements, history, historyIndex } = get();
     const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push([...elements]);
+    newHistory.push(elements.map((el) => ({ ...el })));
     if (newHistory.length > MAX_HISTORY) newHistory.shift();
     set({ history: newHistory, historyIndex: newHistory.length - 1 });
   },
@@ -132,14 +142,22 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     const { historyIndex, history } = get();
     if (historyIndex > 0) {
       const newIndex = historyIndex - 1;
-      set({ historyIndex: newIndex, elements: [...history[newIndex]] });
+      set({
+        historyIndex: newIndex,
+        elements: history[newIndex].map((el) => ({ ...el })),
+        selectedElementId: null,
+      });
     }
   },
   redo: () => {
     const { historyIndex, history } = get();
     if (historyIndex < history.length - 1) {
       const newIndex = historyIndex + 1;
-      set({ historyIndex: newIndex, elements: [...history[newIndex]] });
+      set({
+        historyIndex: newIndex,
+        elements: history[newIndex].map((el) => ({ ...el })),
+        selectedElementId: null,
+      });
     }
   },
   canUndo: () => get().historyIndex > 0,
