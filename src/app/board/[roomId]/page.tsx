@@ -86,15 +86,9 @@ export default function BoardPage() {
         setShowClearDialog(false);
     }, [emitClearCanvas]);
 
-    const handleExportPng = useCallback(async () => {
-        const area = document.getElementById("canvas-area");
-        if (!area) return;
-        const html2canvas = (await import("html2canvas")).default;
-        const canvas = await html2canvas(area, {
-            backgroundColor: "#1a1a2e",
-            scale: 2,
-            useCORS: true,
-        });
+    const handleExportPng = useCallback(() => {
+        const canvas = document.querySelector("canvas");
+        if (!canvas) return;
         const link = document.createElement("a");
         link.download = `whiteboard-${roomId}.png`;
         link.href = canvas.toDataURL("image/png");
@@ -102,15 +96,9 @@ export default function BoardPage() {
     }, [roomId]);
 
     const handleExportPdf = useCallback(async () => {
-        const area = document.getElementById("canvas-area");
-        if (!area) return;
-        const html2canvas = (await import("html2canvas")).default;
+        const canvas = document.querySelector("canvas");
+        if (!canvas) return;
         const { default: jsPDF } = await import("jspdf");
-        const canvas = await html2canvas(area, {
-            backgroundColor: "#1a1a2e",
-            scale: 2,
-            useCORS: true,
-        });
         const imgData = canvas.toDataURL("image/png");
         const pdf = new jsPDF({
             orientation: canvas.width > canvas.height ? "landscape" : "portrait",

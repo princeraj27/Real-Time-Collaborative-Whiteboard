@@ -474,14 +474,15 @@ export default function WhiteboardCanvas({
 
     // Submit text input
     const submitText = useCallback(() => {
-        if (!textInput.value.trim()) {
-            setTextInput((prev) => ({ ...prev, visible: false }));
+        const val = textInput.value.trim();
+        if (!val) {
+            setTextInput({ visible: false, x: 0, y: 0, canvasX: 0, canvasY: 0, value: "" });
             return;
         }
         const state = useCanvasStore.getState();
         const element: CanvasElement = {
             id: uuidv4(), type: "text", points: [], color: state.strokeColor,
-            strokeWidth: state.strokeWidth, text: textInput.value,
+            strokeWidth: state.strokeWidth, text: val,
             x: textInput.canvasX, y: textInput.canvasY,
         };
         state.pushToHistory();
@@ -515,34 +516,44 @@ export default function WhiteboardCanvas({
                 onMouseLeave={handlePointerUp}
             />
 
-            {/* Direct inline text input — type right on the canvas */}
+            {/* Direct inline text input — click, type, Enter to commit */}
             {textInput.visible && (
-                <input
-                    ref={textInputRef}
-                    type="text"
-                    value={textInput.value}
-                    onChange={(e) =>
-                        setTextInput((prev) => ({ ...prev, value: e.target.value }))
-                    }
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter") submitText();
-                        if (e.key === "Escape")
-                            setTextInput((prev) => ({ ...prev, visible: false }));
-                    }}
-                    onBlur={submitText}
-                    className="absolute z-50 bg-transparent outline-none border-none caret-blue-400"
+                <div
+                    className="absolute z-50"
                     style={{
                         left: textInput.x,
-                        top: textInput.y - 12,
-                        fontSize: `${useCanvasStore.getState().strokeWidth * 5 * scale}px`,
-                        fontFamily: "Inter, sans-serif",
-                        color: useCanvasStore.getState().strokeColor,
-                        minWidth: "20px",
-                        width: `${Math.max(20, textInput.value.length * useCanvasStore.getState().strokeWidth * 3 * scale)}px`,
+                        top: textInput.y - 14,
                     }}
-                    autoFocus
-                />
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <input
+                        ref={textInputRef}
+                        type="text"
+                        value={textInput.value}
+                        onChange={(e) =>
+                            setTextInput((prev) => ({ ...prev, value: e.target.value }))
+                        }
+                        onKeyDown={(e) => {
+                            e.stopPropagation();
+                            if (e.key === "Enter") submitText();
+                            if (e.key === "Escape")
+                                setTextInput({ visible: false, x: 0, y: 0, canvasX: 0, canvasY: 0, value: "" });
+                        }}
+                        placeholder="Type here, Enter to add"
+                        className="bg-transparent outline-none border-b-2 border-blue-500 text-white px-1 py-0.5 placeholder:text-white/30"
+                        style={{
+                            fontSize: `${Math.max(14, useCanvasStore.getState().strokeWidth * 5 * scale)}px`,
+                            fontFamily: "Inter, sans-serif",
+                            color: useCanvasStore.getState().strokeColor,
+                            minWidth: "180px",
+                            caretColor: "#3b82f6",
+                        }}
+                        autoFocus
+                    />
+                </div>
             )}
         </div>
     );
 }
+
