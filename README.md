@@ -1,36 +1,93 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Real-Time Collaborative Whiteboard
+
+A real-time collaborative whiteboard built with **Next.js 15**, **Socket.IO**, **Redis**, and **Shadcn/UI**. Draw, sketch, and brainstorm together in real time with WebSocket-powered syncing.
+
+![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square&logo=next.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat-square&logo=typescript)
+![Socket.IO](https://img.shields.io/badge/Socket.IO-4-purple?style=flat-square&logo=socket.io)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-cyan?style=flat-square&logo=tailwindcss)
+
+## Features
+
+- **🎨 Drawing Tools** — Freehand pen (smooth Bézier curves), line, rectangle, circle, eraser, and text
+- **👥 Real-Time Collaboration** — Live drawing sync, cursor tracking, and user presence indicators via WebSockets
+- **🎯 Operational Transformation** — Conflict resolution for concurrent multi-user edits
+- **🔄 Undo/Redo** — Full history stack with keyboard shortcuts (Ctrl+Z / Ctrl+Shift+Z)
+- **🎨 Color & Stroke** — Customizable colors and stroke widths with a rich color picker
+- **📤 Export** — Download whiteboard as high-quality PNG
+- **🌙 Dark Mode** — Premium dark theme with glassmorphism UI
+- **🔗 Room Sharing** — Share room links for instant collaboration
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 15 (App Router, TypeScript) |
+| UI Components | Shadcn/UI, Tailwind CSS, Lucide Icons |
+| Canvas | HTML5 Canvas API + perfect-freehand |
+| Real-time | Socket.IO (custom Next.js server) |
+| Pub/Sub | Redis (via ioredis) |
+| State | Zustand |
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+ or Bun
+- Redis (optional, for multi-server scaling)
+
+### Installation
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Clone the repository
+git clone https://github.com/princeraj27/Real-Time-Collaborative-Whiteboard.git
+cd Real-Time-Collaborative-Whiteboard
+
+# Install dependencies
+bun install
+
+# Start the development server
+bun run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to start collaborating.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Usage
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. **Create a Room** — Click "Create a Room", enter your name, and start drawing
+2. **Join a Room** — Share the room link or paste a room ID to join an existing session
+3. **Draw** — Use the toolbar to select drawing tools, colors, and stroke widths
+4. **Collaborate** — See other users' cursors and drawings in real time
+5. **Export** — Download your whiteboard as a PNG image
 
-## Learn More
+## Project Structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+├── server.ts                      # Custom Next.js server with Socket.IO
+├── src/
+│   ├── app/
+│   │   ├── page.tsx               # Landing page
+│   │   └── board/[roomId]/page.tsx # Whiteboard room
+│   ├── components/
+│   │   ├── canvas/                # Canvas, cursor overlay
+│   │   ├── toolbar/               # Drawing tools, color picker
+│   │   ├── sidebar/               # User presence, room info
+│   │   └── ui/                    # Shadcn/UI components
+│   ├── hooks/                     # useSocket, useHistory
+│   ├── stores/                    # Zustand canvas store
+│   └── lib/                       # Socket.IO client, utilities
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Architecture
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+Client A ──┐
+Client B ──├── Socket.IO ──> Custom Server ──> Redis PubSub
+Client C ──┘                    │
+                                ├── Room State (in-memory)
+                                └── Element Broadcasting
+```
 
-## Deploy on Vercel
+## License
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
